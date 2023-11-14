@@ -1,4 +1,5 @@
 #!/bin/bash
+#A script to bypass warp limitations on android
 #variables
 WD=./
 out=one
