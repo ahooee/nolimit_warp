@@ -1,0 +1,84 @@
+#!/bin/bash
+#A script to bypass warp limitations on android (Termux Version)
+#variables
+WD=./
+out=one
+outD=$WD$out
+dlName=$out.apk
+bdName=$out$out.apk
+fndBase='addDisallowedApplication'
+gpFnd='com.android.vending'
+gpFrm='iri.system.tyrant'
+ytFnd='.method public static final g(Landroid/net/VpnService$Builder;Ljava/util/List;)Landroid/net/VpnService$Builder;'
+ytFrm='.method public static final g(Landroid/net/VpnService$Builder;Ljava/util/List;)Landroid/net/VpnService$Builder;\nreturn-object p0'
+warp=warp
+snName=$warp.apk
+keyStore=$warp.keystore
+storePass=avazeshKonAgeKhasti1
+Alias=cloudflare
+keySize=4096
+validity=9999
+
+
+#functions
+init(){
+ for file in $WD/*.apk; do
+  if [ -f $WD/$dlName ] ; then
+   break
+  fi 
+   mv "$file" "$WD/$dlName"
+ done
+}
+
+deApk(){
+
+
+
+if [ -f $WD$dlName ] ; then
+ apktool d $dlName -r   && cd $outD && grep -rl "$fndBase" |xargs grep -l "$gpFnd" |xargs sed -i "s#${gpFnd}#${gpFrm}#g" ; grep -rl "$fndBase" |xargs  grep -l "$ytFnd" |xargs sed -i "s#${ytFnd}#${ytFrm}#g" ; cd ..
+else
+echo "$dlName not found" 
+exit 1
+fi
+}
+
+reApk(){
+ apktool b $WD$outD -o $bdName && zipalign -f -p 4 $bdName $snName && apksigner sign --ks $keyStore --ks-pass pass:$storePass --ks-key-alias $Alias $snName
+}
+
+genKey(){
+ keytool -genkey -v -keyalg RSA -keysize $keySize -dname "CN=warp,OU=warpdev,O=warpco,L=Teh,S=Teh,C=IR" -keystore $keyStore -alias $Alias  -storepass $storePass -validity $validity
+}
+
+afterDec(){
+     if dpkg --verify aapt ; then
+     echo 4
+        if [ -f $WD$keyStore ] ; then
+        echo 5
+        reApk && rm $WD$bdName && mkdir -p out && mv $WD$snName $WD/out/$snName
+        else
+        echo 5-
+        genKey && reApk && rm $WD$bdName && mkdir -p out && mv $WD$snName $WD/out/$snName
+        fi
+     fi
+
+}
+
+if dpkg --verify git || (apt update && sleep 3 && apt upgrade -y -o Dpkg::Options::="--force-confdef" && apt install git -y) ; then
+ if  apktool -v ||  (rm -r Apktool-termux ; git clone https://github.com/h4ck3r0/Apktool-termux && cd Apktool-termux && touch a && echo "1" >> a && chmod +x * && bash setup.sh && bash apktool.sh < a)  ; then
+echo 1 
+  if  dpkg --verify apksigner ||  apt install apksigner -y ; then
+   if  dpkg --verify aapt ||  apt install aapt -y ; then
+ echo 2
+ init
+    if  [ -d $outD ] ; then
+   echo 3
+     rm -r $outD && deApk && sleep 5 && afterDec
+   else
+   echo 3-  
+   deApk && afterDec && echo "∆∆∆∆∆ done! ∆∆∆∆∆"
+    fi
+   fi
+  fi
+ fi
+fi
